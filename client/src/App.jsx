@@ -1,35 +1,107 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState, useRef } from 'react';
+import axios from 'axios';
+import Header from './components/Header';
+import { Upload, Play, Loader2, BookOpen, Clock } from 'lucide-react';
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  const [file, setFile] = useState(null);
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [feedback, setFeedback] = useState([]); // storing the JSON from fastapi
+  const [loading, setLoading] = useState(false);
+
+  const audioRef = useRef(null);
+
+  // Handle when user picks a file
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setAudioUrl(URL.createObjectURL(selectedFile));
+      setFeedback([]);
+    }
+  };
+
+
+  const handleUpload = async () => {
+    if (!file) return;
+
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+
+      const response = await axios.post('http://localhost:8000/analyze', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      console.log("Server Response:", response.data);
+      // { feedback: [...] }
+      setFeedback(response.data.feedback);
+    } catch (error) {
+      console.error("Upload failed", error);
+      alert("Error analyzing audio. Check console.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Convert "01:00" (String) -> 60 (Seconds)
+  const parseTimestamp = (timeStr) => {
+    const parts = timeStr.split(':');
+    const minutes = parseInt(parts[0], 10);
+    const seconds = parseInt(parts[1], 10);
+    return (minutes * 60) + seconds;
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-8">
+      <div className="max-w-3xl mx-auto space-y-8">
+
+        <Header></Header>
+
+        {/* Upload Card */}
+        <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 text-center">
+          <input
+            type="file"
+            accept="audio/*" // Only accept audio files
+            onChange={handleFileChange}
+            className="block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer transition-all"
+          />
+
+          {file && (
+            <button
+              onClick={handleUpload}
+              disabled={loading}
+              className={`mt-6 w-full py-3 px-6 rounded-xl flex items-center justify-center gap-2 font-semibold text-white transition-all transform active:scale-95 ${
+                loading
+                  ? 'bg-slate-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'
+              }`}
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Upload className="w-5 h-5" />}
+              {loading ? 'Analyzing Pedagogy...' : 'Analyze Audio'}
+            </button>
+          )}
+        </div>
+
+        {/* Audio Player (Sticky) */}
+        {audioUrl && (
+          <div className="sticky top-6 z-10 bg-white/80 backdrop-blur-md p-4 rounded-xl shadow-lg border border-slate-200 ring-1 ring-slate-900/5">
+            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Classroom Recording</h2>
+            {/* The standard HTML5 player */}
+            <audio
+              ref={audioRef}
+              controls
+              className="w-full h-10 accent-blue-600"
+              src={audioUrl}
+            />
+          </div>
+        )}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
