@@ -55,6 +55,14 @@ function App() {
     return (minutes * 60) + seconds;
   };
 
+  const handleSeek = (timestamp) => {
+    if (audioRef.current) {
+      const seconds = parseTimestamp(timestamp);
+      audioRef.current.currentTime = seconds;
+      audioRef.current.play();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-8">
       <div className="max-w-3xl mx-auto space-y-8">
@@ -99,6 +107,50 @@ function App() {
             />
           </div>
         )}
+
+        {/* Feedback Cards */}
+        {feedback.length > 0 && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+              <h2 className="text-xl font-bold text-slate-800">Key Moments</h2>
+              <span className="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-0.5 rounded-full">{feedback.length} insights</span>
+            </div>
+
+            <div className="grid gap-4">
+              {feedback.map((item, index) => (
+                <div
+                  key={index}
+                  className="group bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md hover:border-blue-300 transition-all"
+                >
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-bold text-lg text-slate-900 group-hover:text-blue-700 transition-colors">
+                      {item.principle}
+                    </h3>
+
+                    {/* The "Jump" Button */}
+                    <button
+                      onClick={() => handleSeek(item.timestamp)}
+                      className="flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-600 hover:text-white transition-all ring-1 ring-blue-100"
+                    >
+                      <Play className="w-3 h-3 fill-current" />
+                      <span className="tabular-nums">{item.timestamp}</span>
+                    </button>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <div className="mt-1 flex-shrink-0">
+                      <div className="w-1 h-full min-h-[24px] bg-slate-200 rounded-full group-hover:bg-blue-400 transition-colors"></div>
+                    </div>
+                    <p className="text-slate-600 leading-relaxed text-sm">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
