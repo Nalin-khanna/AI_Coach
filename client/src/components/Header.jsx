@@ -2,7 +2,7 @@ import { BookOpen } from "lucide-react";
 function Header () {
     return (
         <div>
-        <header className="flex flex-col items-center gap-2 mb-8">
+        <header className="flex flex-col items-center gap-2 mb-8 w-full mx-auto">
           <div className="p-3 bg-blue-600 rounded-full shadow-lg">
             <BookOpen className="w-8 h-8 text-white" />
           </div>
