@@ -34,13 +34,15 @@ function App() {
         method: 'POST',
         body: formData,
       });
-
       const data = await response.json();
-      console.log("Server Response:", data);
+      if(!response.ok){
+        throw new Error(data.error || "Server Error");
+      }
       setFeedback(data.feedback);
     } catch (error) {
       console.error("Upload failed", error);
-      alert("Error analyzing audio. Check console.");
+      setLoading(false);
+      alert("Error analyzing audio.");
     } finally {
       setLoading(false);
     }
